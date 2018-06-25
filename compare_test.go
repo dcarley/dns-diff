@@ -32,7 +32,7 @@ var _ = Describe("Compare", func() {
 		pass = false
 		in = &bytes.Buffer{}
 		out = &bytes.Buffer{}
-		pri = getEnv("DNS_SEC_HOST", "127.0.0.1") + ":" + getEnv("DNS_SEC_PORT", "10053")
+		pri = getEnv("DNS_PRI_HOST", "127.0.0.1") + ":" + getEnv("DNS_PRI_PORT", "10053")
 		sec = getEnv("DNS_SEC_HOST", "127.0.0.1") + ":" + getEnv("DNS_SEC_PORT", "20053")
 
 		format.TruncatedDiff = false
