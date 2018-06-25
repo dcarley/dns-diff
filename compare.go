@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"io"
 	"strings"
 
@@ -16,6 +17,7 @@ const (
 
 func Compare(in io.Reader, priNS, secNS string) (pass bool) {
 	pass = true
+	client := &dns.Client{}
 	scanner := bufio.NewScanner(in)
 
 	for scanner.Scan() {
@@ -38,7 +40,29 @@ func Compare(in io.Reader, priNS, secNS string) (pass bool) {
 			continue
 		}
 
-		log.Println(name, typeCode)
+		query := &dns.Msg{}
+		query.SetQuestion(name, typeCode)
+
+		var (
+			err              error
+			priResp, secResp *dns.Msg
+		)
+		priResp, err = Request(client, query, priNS)
+		if err != nil {
+			log.Errorln(FailChar, name, typeStr)
+			log.Errorln("primary response:", err)
+			pass = false
+			continue
+		}
+		secResp, err = Request(client, query, secNS)
+		if err != nil {
+			log.Errorln(FailChar, name, typeStr)
+			log.Errorln("secondary response:", err)
+			pass = false
+			continue
+		}
+
+		log.Println(priResp, secResp)
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -47,4 +71,16 @@ func Compare(in io.Reader, priNS, secNS string) (pass bool) {
 	}
 
 	return pass
+}
+
+func Request(client *dns.Client, query *dns.Msg, ns string) (*dns.Msg, error) {
+	resp, _, err := client.Exchange(query, ns)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Rcode != dns.RcodeSuccess {
+		return nil, errors.New(dns.RcodeToString[resp.Rcode])
+	}
+
+	return resp, nil
 }

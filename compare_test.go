@@ -23,14 +23,17 @@ func getEnv(name, fallback string) string {
 
 var _ = Describe("Compare", func() {
 	var (
-		pass    bool
-		in, out *bytes.Buffer
+		pass     bool
+		in, out  *bytes.Buffer
+		pri, sec string
 	)
 
 	BeforeEach(func() {
 		pass = false
 		in = &bytes.Buffer{}
 		out = &bytes.Buffer{}
+		pri = getEnv("DNS_SEC_HOST", "127.0.0.1") + ":" + getEnv("DNS_SEC_PORT", "10053")
+		sec = getEnv("DNS_SEC_HOST", "127.0.0.1") + ":" + getEnv("DNS_SEC_PORT", "20053")
 
 		format.TruncatedDiff = false
 		log.SetOutput(out)
@@ -40,7 +43,7 @@ var _ = Describe("Compare", func() {
 	})
 
 	JustBeforeEach(func() {
-		pass = Compare(in, "", "")
+		pass = Compare(in, pri, sec)
 	})
 
 	Describe("invalid inputs", func() {
@@ -58,6 +61,23 @@ level=error msg="✘ unknowntype.example.com. X"
 level=error msg="unknown record type"
 level=error msg="✘ extrafield.example.com. IN A"
 level=error msg="couldn't parse record"
+`))
+			Expect(pass).To(BeFalse())
+		})
+	})
+
+	Describe("records that don't exist", func() {
+		BeforeEach(func() {
+			in = bytes.NewBuffer([]byte(`pri-missing.example.com. A
+sec-missing.example.com. A
+`))
+		})
+
+		It("should log errors", func() {
+			Expect(out.String()).To(Equal(`level=error msg="✘ pri-missing.example.com. A"
+level=error msg="primary response: NXDOMAIN"
+level=error msg="✘ sec-missing.example.com. A"
+level=error msg="secondary response: NXDOMAIN"
 `))
 			Expect(pass).To(BeFalse())
 		})

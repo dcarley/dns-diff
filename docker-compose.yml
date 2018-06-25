@@ -1,0 +1,18 @@
+version: '3'
+services:
+  primary:
+    image: andyshinn/dnsmasq
+    command: --user=root --conf-file=/conf/primary.conf
+    ports:
+      - "${DNS_PRI_PORT}:53/udp"
+      - "${DNS_PRI_PORT}:53/tcp"
+    volumes:
+      - ./fixtures:/conf
+  secondary:
+    image: andyshinn/dnsmasq
+    command: --user=root --conf-file=/conf/secondary.conf
+    ports:
+      - "${DNS_SEC_PORT}:53/udp"
+      - "${DNS_SEC_PORT}:53/tcp"
+    volumes:
+      - ./fixtures:/conf
