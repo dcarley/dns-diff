@@ -112,12 +112,14 @@ level=warning msg="+ ttl.example.org.\t200\tIN\tA\t1.1.1.1"
 		BeforeEach(func() {
 			in = bytes.NewBuffer([]byte(`same-a.example.com. A
 same-cname.example.com. CNAME
+same-large.example.com. TXT
 `))
 		})
 
 		It("should log errors", func() {
 			Expect(out.String()).To(Equal(`level=info msg="✔ same-a.example.com. A"
 level=info msg="✔ same-cname.example.com. CNAME"
+level=info msg="✔ same-large.example.com. TXT"
 `))
 			Expect(pass).To(BeTrue())
 		})

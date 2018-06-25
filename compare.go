@@ -44,6 +44,7 @@ func Compare(in io.Reader, priNS, secNS string) (pass bool) {
 
 		query := &dns.Msg{}
 		query.SetQuestion(dns.Fqdn(name), typeCode)
+		query.SetEdns0(4096, false)
 
 		var (
 			err              error
