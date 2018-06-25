@@ -82,4 +82,44 @@ level=error msg="secondary response: NXDOMAIN"
 			Expect(pass).To(BeFalse())
 		})
 	})
+
+	Describe("records that are different", func() {
+		BeforeEach(func() {
+			in = bytes.NewBuffer([]byte(`value-a.example.com. A
+value-cname.example.com. CNAME
+ttl.example.org. A
+`))
+		})
+
+		It("should log warnings", func() {
+			Expect(out.String()).To(Equal(`level=warning msg="✘ value-a.example.com. A"
+level=warning msg="- value-a.example.com.\t60\tIN\tA\t1.1.1.1"
+level=warning msg="- value-a.example.com.\t60\tIN\tA\t2.2.2.2"
+level=warning msg="+ value-a.example.com.\t60\tIN\tA\t3.3.3.3"
+level=warning msg="+ value-a.example.com.\t60\tIN\tA\t4.4.4.4"
+level=warning msg="✘ value-cname.example.com. CNAME"
+level=warning msg="- value-cname.example.com.\t60\tIN\tCNAME\tprimary.example.com."
+level=warning msg="+ value-cname.example.com.\t60\tIN\tCNAME\tsecondary.example.com."
+level=warning msg="✘ ttl.example.org. A"
+level=warning msg="- ttl.example.org.\t100\tIN\tA\t1.1.1.1"
+level=warning msg="+ ttl.example.org.\t200\tIN\tA\t1.1.1.1"
+`))
+			Expect(pass).To(BeFalse())
+		})
+	})
+
+	Describe("records that are the same", func() {
+		BeforeEach(func() {
+			in = bytes.NewBuffer([]byte(`same-a.example.com. A
+same-cname.example.com. CNAME
+`))
+		})
+
+		It("should log errors", func() {
+			Expect(out.String()).To(Equal(`level=info msg="✔ same-a.example.com. A"
+level=info msg="✔ same-cname.example.com. CNAME"
+`))
+			Expect(pass).To(BeTrue())
+		})
+	})
 })

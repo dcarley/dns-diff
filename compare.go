@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"errors"
 	"io"
+	"reflect"
+	"sort"
 	"strings"
 
 	"github.com/miekg/dns"
@@ -62,7 +64,18 @@ func Compare(in io.Reader, priNS, secNS string) (pass bool) {
 			continue
 		}
 
-		log.Println(priResp, secResp)
+		if reflect.DeepEqual(priResp.Answer, secResp.Answer) {
+			log.Infoln(PassChar, name, typeStr)
+		} else {
+			log.Warnln(FailChar, name, typeStr)
+			for _, answer := range priResp.Answer {
+				log.Warnln("-", answer)
+			}
+			for _, answer := range secResp.Answer {
+				log.Warnln("+", answer)
+			}
+			pass = false
+		}
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -81,6 +94,10 @@ func Request(client *dns.Client, query *dns.Msg, ns string) (*dns.Msg, error) {
 	if resp.Rcode != dns.RcodeSuccess {
 		return nil, errors.New(dns.RcodeToString[resp.Rcode])
 	}
+
+	sort.Slice(resp.Answer, func(i, j int) bool {
+		return resp.Answer[i].String() < resp.Answer[j].String()
+	})
 
 	return resp, nil
 }
