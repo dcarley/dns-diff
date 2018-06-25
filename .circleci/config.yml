@@ -1,0 +1,22 @@
+version: 2
+jobs:
+  build:
+    working_directory: /go/src/github.com/dcarley/dns-diff
+    docker:
+      - image: circleci/golang:1.10
+    environment:
+      - DNS_PRI_PORT: 10053
+      - DNS_SEC_PORT: 20053
+    steps:
+      - checkout
+      - run:
+          name: Install dnsmasq
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y dnsmasq
+      - run:
+          name: Start dnsmasq
+          command: |
+            dnsmasq --port="${DNS_PRI_PORT}" --conf-file=fixtures/primary.conf
+            dnsmasq --port="${DNS_SEC_PORT}" --conf-file=fixtures/secondary.conf
+      - run: go test -v ./...
