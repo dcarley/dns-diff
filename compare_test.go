@@ -122,4 +122,19 @@ level=info msg="✔ same-cname.example.com. CNAME"
 			Expect(pass).To(BeTrue())
 		})
 	})
+
+	Describe("records missing a qualifying dot", func() {
+		BeforeEach(func() {
+			in = bytes.NewBuffer([]byte(`same-a.example.com A
+same-cname.example.com CNAME
+`))
+		})
+
+		It("should log errors", func() {
+			Expect(out.String()).To(Equal(`level=info msg="✔ same-a.example.com A"
+level=info msg="✔ same-cname.example.com CNAME"
+`))
+			Expect(pass).To(BeTrue())
+		})
+	})
 })

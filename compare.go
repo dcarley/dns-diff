@@ -43,7 +43,7 @@ func Compare(in io.Reader, priNS, secNS string) (pass bool) {
 		}
 
 		query := &dns.Msg{}
-		query.SetQuestion(name, typeCode)
+		query.SetQuestion(dns.Fqdn(name), typeCode)
 
 		var (
 			err              error
